@@ -1,6 +1,6 @@
 {
   "name": "toastiq",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "description": "A modern light-weight toast notification library for React.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -24,6 +24,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -32,6 +33,14 @@
     "notification",
     "snackbar"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pratyush2312/toastiq.git"
+  },
+  "homepage": "https://github.com/Pratyush2312/toastiq#readme",
+  "bugs": {
+    "url": "https://github.com/Pratyush2312/toastiq/issues"
+  },
   "author": "Pratyush Singh",
   "license": "MIT",
   "devDependencies": {
