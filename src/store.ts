@@ -1,12 +1,13 @@
 import type { ToastItem, ToastOptions, PromiseMessages } from "./types";
 
 type Listener = () => void;
-type Omit<T, K extends keyof T> = {
-    [P in keyof T as P extends K ? never : P]: T[P];
-};
+
+/** Must match the exit transition in styles.css (0.25s). */
+const EXIT_MS = 260;
 
 let toasts: ToastItem[] = [];
 let counter = 0;
+let revision = 0;
 const listeners = new Set<Listener>();
 
 function emit() {
@@ -30,10 +31,13 @@ export function toast(message: string, options: ToastOptions = {}): string {
     const item: ToastItem = {
         id,
         message,
+        description: options.description,
         type,
         // loading toasts stay until they resolve
-        duration: options.duration ?? (type === "loading" ? 0 : 3000),
+        duration: options.duration ?? (type === "loading" ? 0 : 4000),
         actions: options.actions ?? [],
+        dismissing: false,
+        rev: ++revision,
     };
 
     // same id = update in place (keeps its position), otherwise add to the end
@@ -46,9 +50,27 @@ export function toast(message: string, options: ToastOptions = {}): string {
     return id;
 }
 
-export function dismiss(id: string) {
-    toasts = toasts.filter((t) => t.id !== id);
+/** Dismiss one toast by id, or every toast when called without an id. */
+export function dismiss(id?: string): void {
+    if (id === undefined) {
+        toasts.forEach((t) => dismiss(t.id));
+        return;
+    }
+
+    const current = toasts.find((t) => t.id === id);
+    if (!current || current.dismissing) return;
+
+    toasts = toasts.map((t) => (t.id === id ? { ...t, dismissing: true } : t));
     emit();
+
+    // remove after the exit animation, unless the toast was updated meanwhile
+    setTimeout(() => {
+        const t = toasts.find((x) => x.id === id);
+        if (t?.dismissing) {
+            toasts = toasts.filter((x) => x.id !== id);
+            emit();
+        }
+    }, EXIT_MS);
 }
 
 function promise<T>(
@@ -67,7 +89,7 @@ function promise<T>(
         (err) => {
             const message =
                 typeof msgs.error === "function" ? msgs.error(err) : msgs.error;
-            toast(message, { id, type: "error", duration: 5000 });
+            toast(message, { id, type: "error", duration: 6000 });
         }
     );
 
